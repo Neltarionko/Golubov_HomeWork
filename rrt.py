@@ -11,8 +11,9 @@ class RRT():
         self.map = map
         self.all_point = [start]  # Массив из точек, входящих в дерево
         self.tree = {}  # Словарь дерева вида Точка_начала_отрезка:Точка_конца_отрезка
-        self.end_area = end_area
-        self.growth_factor = growth_factor
+        self.end_area = end_area # область попадания в целевую точку
+        self.growth_factor = growth_factor # максимальное расстояние роста ветки
+        self.path = [] # Локальный массив пути 
     
     def find_nearest_point(self,point):
         '''Поиск ближайшей точки среди точек входящих в дерево
@@ -45,7 +46,7 @@ class RRT():
             return True
         
         if abs(dx) >= abs(dy):
-            for x in range(point[1]-1,nearest_point[1],np.sign(nearest_point[1] - point[1])):
+            for x in range(point[1],nearest_point[1],np.sign(nearest_point[1] - point[1])):
                 y = (dy/dx)*(x - nearest_point[1]) + nearest_point[0]
                 try:
                     if self.map[int(y),int(x)] == 1:
@@ -53,7 +54,7 @@ class RRT():
                 except:
                     continue
         else:
-            for y in range(point[0]-1,nearest_point[0],np.sign(nearest_point[0] - point[0])):
+            for y in range(point[0],nearest_point[0],np.sign(nearest_point[0] - point[0])):
                 x = (dx/dy)*(y - nearest_point[0]) + nearest_point[1]
                 try:
                     if self.map[int(y),int(x)] == 1:
@@ -62,20 +63,28 @@ class RRT():
                     continue
         return False
     
-    def find_path(self):
+    def find_path(self,start_point):
         '''Поиск пути в построенном дереве
 
         return: Массив точек дерева между начальной и конечной
         '''
-        path = [self.all_point[-1]]
+        path = [start_point]
         while path[-1] != self.start:
             path.append(self.tree[path[-1]])
-        return np.array(path)
+        return path
     
     def check_end_area(self,point):
+        '''Проверка попадания точки в конечную область
+        
+        return: True и False в соответствии с результатом проврки
+        '''
         return ((point[0]-self.end[0])**2 + (point[1]-self.end[1])**2) <= self.end_area**2
     
     def check_growth_factor(self,point,nearest_point):
+        '''Проверка вылета точки за фактор роста
+                
+        return: точку, удовлетворющу факторую роста
+        '''
         if ((point[0]-nearest_point[0])**2 + (point[1]-nearest_point[1])**2) >= self.growth_factor**2:
             dx = point[1]-nearest_point[1]
             dy = point[0]-nearest_point[0]
@@ -100,17 +109,13 @@ class RRT():
                 self.all_point.append(point)
                 self.tree[point] = nearest_point
                 if self.check_end_area(point):
-                    return self.find_path()
+                    return np.array(self.find_path(self.all_point[-1]))
                 
-start = (11,11)
-end = (150,150)
-end_area = 10
-growth_factor = 20
-map = np.loadtxt("map.txt", dtype=float)
-rrt = RRT(start,end,map,end_area,growth_factor)
-path = rrt.make_tree(100000)
-plt.imshow(map, cmap='Greys')
-plt.plot(start[1],start[0],"bo")
-plt.plot(end[1],end[0],"go")
-plt.plot(path[0:path.shape[0],1],path[0:path.shape[0],0])
-plt.show()
+    def print_all_tree(self):
+        '''
+        Отрисовка всего изученного дерева
+        '''
+        for poit in self.all_point:
+            if poit != self.start:
+                plt.plot([poit[1],self.tree[poit][1]],[poit[0],self.tree[poit][0]],color="#4d3d27",ms=20)
+                
