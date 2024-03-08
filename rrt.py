@@ -1,14 +1,18 @@
 import random
 import numpy as np
+import matplotlib.pyplot as plt
+import math
 
 
 class RRT():
-    def __init__(self,start: tuple,end: tuple,map: np.array):
+    def __init__(self,start: tuple,end: tuple,map: np.array, end_area, growth_factor):
         self.start = start  # Точка начала пути
         self.end = end  # Точка конца пути
         self.map = map
         self.all_point = [start]  # Массив из точек, входящих в дерево
         self.tree = {}  # Словарь дерева вида Точка_начала_отрезка:Точка_конца_отрезка
+        self.end_area = end_area
+        self.growth_factor = growth_factor
     
     def find_nearest_point(self,point):
         '''Поиск ближайшей точки среди точек входящих в дерево
@@ -63,10 +67,22 @@ class RRT():
 
         return: Массив точек дерева между начальной и конечной
         '''
-        path = [self.end]
+        path = [self.all_point[-1]]
         while path[-1] != self.start:
             path.append(self.tree[path[-1]])
-        return path
+        return np.array(path)
+    
+    def check_end_area(self,point):
+        return ((point[0]-self.end[0])**2 + (point[1]-self.end[1])**2) <= self.end_area**2
+    
+    def check_growth_factor(self,point,nearest_point):
+        if ((point[0]-nearest_point[0])**2 + (point[1]-nearest_point[1])**2) >= self.growth_factor**2:
+            dx = point[1]-nearest_point[1]
+            dy = point[0]-nearest_point[0]
+            angle = math.atan2(dy,dx)
+            return (int(nearest_point[0] + self.growth_factor * math.sin(angle)), int(nearest_point[1] + self.growth_factor * math.cos(angle)))
+        else:
+            return point
         
     
     def make_tree(self,step: int):
@@ -77,17 +93,24 @@ class RRT():
         for  i in range(step):
             point = (random.randint(0,self.map.shape[0]),random.randint(0,self.map.shape[1]))
             nearest_point = self.find_nearest_point(point)
+            point = self.check_growth_factor(point,nearest_point)
             if self.find_collision(point,nearest_point):
                 continue
             else:
-                if point != self.end:
-                    self.tree[point] = nearest_point
-                    self.all_point.append(point)
-                else:
-                    self.tree[point] = nearest_point
+                self.all_point.append(point)
+                self.tree[point] = nearest_point
+                if self.check_end_area(point):
                     return self.find_path()
                 
-            
-            
-rrt = RRT((11,11),(1,1),np.loadtxt("map.txt", dtype=float))
-print(rrt.make_tree(100000))
+start = (11,11)
+end = (150,150)
+end_area = 10
+growth_factor = 20
+map = np.loadtxt("map.txt", dtype=float)
+rrt = RRT(start,end,map,end_area,growth_factor)
+path = rrt.make_tree(100000)
+plt.imshow(map, cmap='Greys')
+plt.plot(start[1],start[0],"bo")
+plt.plot(end[1],end[0],"go")
+plt.plot(path[0:path.shape[0],1],path[0:path.shape[0],0])
+plt.show()
