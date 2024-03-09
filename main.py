@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from rrt import *
 from rrt_connect import *
+from rrt_star import *
 '''
 map = np.loadtxt("map.txt", dtype=float)
 map = np.rot90(map)
@@ -11,11 +12,10 @@ plt.imshow(map, cmap='Greys')
 plt.show()
 '''
 
-rrt_mod = 1
-
+rrt_mod = 2
+start = (100,43)
+end = (20,150)
 if rrt_mod == 0:
-    start = (150,50)
-    end = (20,150)
     end_area = 2
     growth_factor = 20
     map = np.loadtxt("map2.txt", dtype=float)
@@ -28,8 +28,6 @@ if rrt_mod == 0:
     plt.plot(path[0:path.shape[0],1],path[0:path.shape[0],0],"b",ms = 3)
     plt.show()
 elif rrt_mod == 1:
-    start = (150,50)
-    end = (20,150)
     end_area = 30
     growth_factor = 20
     map = np.loadtxt("map2.txt", dtype=float)
@@ -44,4 +42,16 @@ elif rrt_mod == 1:
     plt.plot(start[1],start[0],"bo")
     plt.plot(end[1],end[0],"go")
     plt.plot(path[0:path.shape[0],1],path[0:path.shape[0],0],color="#7cb3e3b0")
+    plt.show()
+elif rrt_mod == 2:
+    end_area = 2
+    growth_factor = 20
+    map = np.loadtxt("map2.txt", dtype=float)
+    rrt = RRT_star(start,end,map,end_area,growth_factor)
+    path = rrt.make_tree(100000)
+    plt.imshow(map, cmap='Greys')
+    rrt.print_all_tree()
+    plt.plot(start[1],start[0],"bo")
+    plt.plot(end[1],end[0],"go")
+    plt.plot(path[0:path.shape[0],1],path[0:path.shape[0],0],"b",ms = 3)
     plt.show()
