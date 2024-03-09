@@ -3,6 +3,10 @@ from rrt import *
 class RRT_star(RRT):    
     
     def path_len(self,tree_point):
+        '''Измеряет длину пути от начала до указанной точки
+
+        return: измеренная длина пути
+        '''
         path_len = 0
         temp_point = tree_point
         while temp_point != self.start:
@@ -12,6 +16,9 @@ class RRT_star(RRT):
         return path_len
     
     def near_goal(self,point):
+        '''Оптимизирует путь от начала до точек в области
+        При наличии более короткого пути перестраивает ребра графа
+        '''
         for tree_point in self.all_point:
             if ((point[0]-tree_point[0])**2 + (point[1]-tree_point[1])**2) <= self.growth_factor**2:
                 old_path_len = self.path_len(tree_point)

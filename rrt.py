@@ -111,11 +111,11 @@ class RRT():
                 if self.check_end_area(point):
                     return np.array(self.find_path(self.all_point[-1]))
                 
-    def print_all_tree(self):
+    def print_all_tree(self, color):
         '''
         Отрисовка всего изученного дерева
         '''
         for poit in self.all_point:
             if poit != self.start:
-                plt.plot([poit[1],self.tree[poit][1]],[poit[0],self.tree[poit][0]],color="#4d3d27",ms=20)
+                plt.plot([poit[1],self.tree[poit][1]],[poit[0],self.tree[poit][0]],color=color,ms=20)
                 
