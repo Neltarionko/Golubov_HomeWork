@@ -1,60 +1,71 @@
-import numpy as np 
+import networkx as nx
 import matplotlib.pyplot as plt
-from rrt import *
-from rrt_connect import *
-from rrt_star import *
+import numpy as np
+import sys
 
-# Цвета для графиков
-brown = "#4d3d27"
-red = "#ff0000"
-'''
-Выбор алгоритма RRT
-0 - RRT
-1 - RRT connect
-2 - RRT*
-'''
-rrt_mod = 1
+class Graph():
+    def __init__(self,map) -> None:
+        self.map = map
+        self.G = nx.Graph()
+        self.all_poit = []
+    
+    def make_grapf(self,point = [(1,1),(2,2)]):
+        if point in self.all_poit:
+            return
+        robot1 = point[0]
+        robot2 = point[1]
+        self.all_poit.append(point)
+        for y1 in range(max(0,robot1[0]-1),min(self.map.shape[0],robot1[0]+2)):
+            for x1 in range(max(0,robot1[1]-1),min(self.map.shape[1],robot1[1]+2)):
+                if abs(y1-robot1[0]) + abs(x1-robot1[1]) == 2:
+                    continue
+                for y2 in range(max(0,robot2[0]-1),min(self.map.shape[0],robot2[0]+2)):
+                    for x2 in range(max(0,robot2[1]-1),min(self.map.shape[1],robot2[1]+2)):
+                        if abs(y2-robot2[0]) + abs(x2-robot2[1]) == 2:
+                            continue
 
-# Координаты начала и конца пути
-start = (100,43)
-end = (20,150)
+                        if x2 == x1 and y2 == y1:
+                            continue
+                        if (self.map[y1,x1] != 1) and (self.map[y2,x2] != 1):
+                            self.G.add_edge(str([robot1,robot2]),str([(y1,x1),(y2,x2)]))
+                            self.make_grapf([(y1,x1),(y2,x2)])
+        return self.G
 
-# Радиус области для засчитывания попадания в конечную точку
-end_area = 2
-
-# Фактор роста быстрорастущего дерева
-growth_factor = 20
-
-map = np.loadtxt("map2.txt", dtype=float)
-
-if rrt_mod == 0:
-    rrt = RRT(start,end,map,end_area,growth_factor)
-    path = rrt.make_tree(100000)
-    plt.imshow(map, cmap='Greys')
-    rrt.print_all_tree(brown)
-    plt.plot(start[1],start[0],"bo")
-    plt.plot(end[1],end[0],"go")
-    plt.plot(path[0:path.shape[0],1],path[0:path.shape[0],0],"b",ms = 3)
+def plot_one_point(G,poit):
+    G2 = nx.Graph()
+    for n in G.neighbors(poit):
+        G2.add_edge(poit,n)
+    nx.draw_spring(G2, with_labels = True)
     plt.show()
-elif rrt_mod == 1:
-    rrt1 = RRT_connect(start,end,map,end_area,growth_factor)
-    rrt2 = RRT_connect(end,start,map,end_area,growth_factor)
-    rrt1.get_tree(rrt2)
-    rrt2.get_tree(rrt1)
-    path = rrt1.make_tree()
-    plt.imshow(map, cmap='Greys')
-    rrt1.print_all_tree(brown)
-    rrt2.print_all_tree(red)
-    plt.plot(start[1],start[0],"bo")
-    plt.plot(end[1],end[0],"go")
-    plt.plot(path[0:path.shape[0],1],path[0:path.shape[0],0],color="#7cb3e3b0")
+    
+def plot_all_grpah(G):
+    nx.draw_shell(G, with_labels = True)
     plt.show()
-elif rrt_mod == 2:
-    rrt = RRT_star(start,end,map,end_area,growth_factor)
-    path = rrt.make_tree(100000)
-    plt.imshow(map, cmap='Greys')
-    rrt.print_all_tree(brown)
-    plt.plot(start[1],start[0],"bo")
-    plt.plot(end[1],end[0],"go")
-    plt.plot(path[0:path.shape[0],1],path[0:path.shape[0],0],"b",ms = 3)
-    plt.show()
+    
+def make_map():
+    map = np.zeros((10,10))
+    map[0,:] = 1
+    map[-1,:] = 1
+    map[:,-1] = 1
+    map[:,0] = 1
+    map[2,1] = 1
+    map[2,4:8] = 1
+    map[3,5:8] = 1
+    map[4,7:8] = 1
+    map[5,2:5] = 1
+    map[5+2,6:8] = 1
+    return map
+
+map = make_map()
+#plt.imshow(map, cmap='Greys')
+#plt.show()
+sys.setrecursionlimit(100000)
+
+GR = Graph(map)
+G = GR.make_grapf()
+mod = 1
+point = str([(1,2),(2,2)])
+if mod == 0:
+    plot_one_point(G,point)
+else:
+    plot_all_grpah(G)
