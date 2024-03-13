@@ -21,8 +21,9 @@ class RRT_star(RRT):
         '''
         for tree_point in self.all_point:
             if ((point[0]-tree_point[0])**2 + (point[1]-tree_point[1])**2) <= self.growth_factor**2:
-                old_path_len = self.path_len(tree_point)
-                new_path_len = self.path_len(point) + ((point[0]-tree_point[0])**2 + (point[1]-tree_point[1])**2)**0.5
+                heuristic = ((point[0]-self.end[0])**2 + (point[1]-self.end[1])**2)**0.5
+                old_path_len = self.path_len(tree_point) + heuristic
+                new_path_len = self.path_len(point) + ((point[0]-tree_point[0])**2 + (point[1]-tree_point[1])**2)**0.5 + heuristic
                 if new_path_len < old_path_len and not self.find_collision(point,tree_point ):
                     del self.tree[tree_point]
                     self.tree[tree_point] = point
@@ -33,6 +34,7 @@ class RRT_star(RRT):
 
         step: Максимальное количество измерений для RRT
         '''
+        self.best_last = self.start
         for  i in range(step):
             point = (random.randint(0,self.map.shape[0]),random.randint(0,self.map.shape[1]))
             nearest_point = self.find_nearest_point(point)
@@ -44,4 +46,9 @@ class RRT_star(RRT):
                 self.tree[point] = nearest_point
                 self.near_goal(point)
                 if self.check_end_area(point):
-                    return np.array(self.find_path(self.all_point[-1]))
+                    heuristic1 = ((point[0]-self.end[0])**2 + (point[1]-self.end[1])**2)**0.5
+                    heuristic2 = ((self.best_last[0]-self.end[0])**2 + (self.best_last[1]-self.end[1])**2)**0.5
+                    if self.path_len(self.best_last) + heuristic2 > self.path_len(point) + heuristic1 or (self.best_last == self.start):
+                        self.best_last = point
+        
+        return np.array(self.find_path(tuple(self.best_last)))

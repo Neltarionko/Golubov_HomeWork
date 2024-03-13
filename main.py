@@ -6,14 +6,14 @@ from rrt_star import *
 
 # Цвета для графиков
 brown = "#4d3d27"
-red = "#ff0000"
+red = "#448c39"
 '''
 Выбор алгоритма RRT
 0 - RRT
 1 - RRT connect
 2 - RRT*
 '''
-rrt_mod = 1
+rrt_mod = 2
 
 # Координаты начала и конца пути
 start = (100,43)
@@ -51,7 +51,7 @@ elif rrt_mod == 1:
     plt.show()
 elif rrt_mod == 2:
     rrt = RRT_star(start,end,map,end_area,growth_factor)
-    path = rrt.make_tree(100000)
+    path = rrt.make_tree(10000)
     plt.imshow(map, cmap='Greys')
     rrt.print_all_tree(brown)
     plt.plot(start[1],start[0],"bo")
